@@ -4,7 +4,7 @@ import jieba
 
 
 def divide_train_test(k):
-    '''数据集划分，k取0-9'''
+    # 数据集划分，k取0-9
     i = 0
     ftest = open('cnews.test.txt', 'w+', encoding='UTF-8')
     ftrain = open('cnews.train.txt', 'w+', encoding='UTF-8')
@@ -20,13 +20,13 @@ def divide_train_test(k):
 
 
 def jieba_cut(data):
-    '''结巴分词'''
+    # 结巴分词
     txt_list = [[] for _ in range(10)]
     stopwords = get_stopword()
     j = 0
     for i in range(0, len(data)):
-        txts = jieba.cut(data[i])
-        for word in txts:
+        txt_s = jieba.cut(data[i])
+        for word in txt_s:
             if word not in stopwords and word != ' ' and word != '\xa0':
                 txt_list[j].append(word)
         if (i + 1) % 90 == 0:
@@ -35,7 +35,7 @@ def jieba_cut(data):
 
 
 def data_load():
-    '''数据加载'''
+    # 数据加载
     with open('cnews.train.txt', 'r', encoding='utf-8') as f_train:
         train = pd.read_table(f_train, names=['类别', '内容'])
     with open('cnews.test.txt', 'r', encoding='utf-8') as f_test:
@@ -48,7 +48,7 @@ def data_load():
 
 
 def get_stopword():
-    '''停词'''
+    # 停词
     with open('cnews.vocab.txt', 'r', encoding='utf-8') as sw:
         sw_list = sw.readlines()
         sws = [x.strip() for x in sw_list]
@@ -84,12 +84,12 @@ def conditional_probability(data):
             s[j] += data[j][dic]
 
     # 类别m文档  条件概率
-    p = [[] for _ in range(0, 10)]
+    p = [{} for _ in range(0, 10)]
     for m in range(0, len(data)):
         for n in range(0, len(k[m])):
-            p[m].append(dict(k[m][n], (data[m][k[m][n]] + 1) / (len(k_s) + s[m])))
+            p[m].update({k[m][n]: (data[m][k[m][n]] + 1) / (len(k_s) + s[m])})
         for o in range(len(k[m]), len(k_s)):
-            p[m].append(1 / (len(k_s) + s[m]))
+            p[m].update({'q': 1 / (len(k_s) + s[m])})
 
     return p
 
