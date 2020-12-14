@@ -1,6 +1,8 @@
 from collections import Counter
 import pandas as pd
 import jieba
+import json
+import math
 
 
 def divide_train_test(k):
@@ -75,6 +77,9 @@ def conditional_probability(data):
         k[i] = list(data[i].keys())
         ks.extend(k[i])
     k_s = list(set(ks))
+    # for i in ks:
+    #     if not i in k_s:  # 去重
+    #         k_s.append(i)
     # 得到训练集中所有的词（已去重）
 
     # 类别j文档集词列表，词语总数
@@ -86,10 +91,11 @@ def conditional_probability(data):
     # 类别m文档  条件概率
     p = [{} for _ in range(0, 10)]
     for m in range(0, len(data)):
-        for n in range(0, len(k[m])):
-            p[m].update({k[m][n]: (data[m][k[m][n]] + 1) / (len(k_s) + s[m])})
-        for o in range(len(k[m]), len(k_s)):
-            p[m].update({'q': 1 / (len(k_s) + s[m])})
+        for n in range(0, len(k_s)):
+            if k_s[n] not in data[m]:
+                p[m].update({k_s[n]: (1 / (len(k_s) + s[m]))})
+            else:
+                p[m].update({k_s[n]: ((data[m][k_s[n]] + 1) / (len(k_s) + s[m]))})
 
     return p
 
@@ -97,21 +103,31 @@ def conditional_probability(data):
 def main(k):
     divide_train_test(k)
     x_train, y_train, x_test, y_test = data_load()
-    train_data = jieba_cut(x_train)
-
-    # 得到10种类别训练集的dict
-    # count[ dict * 10 ]
-    count = word_frequency(train_data)
-
-    # 条件概率 con_pro[1-10][ 词 ]
-    con_pro = conditional_probability(count)
-    with open('model.txt', 'w+', encoding='UTF-8') as f:
-        for i in range(len(con_pro)):
-            for j in range(len(con_pro[i])):
-                f.write(str(con_pro[i][j]))
-                f.write(',')
-            f.write('\n')
-    print(con_pro[0])
+    print(x_train[44])
+    print(y_train[44])
+    # train_data = jieba_cut(x_train)
+    #
+    # # 得到10种类别训练集的dict
+    # # count[ dict * 10 ]
+    # count = word_frequency(train_data)
+    #
+    # # 条件概率 con_pro[1-10][ 词 ]
+    # con_pro = conditional_probability(count)
+    # # json_str = json.dumps(con_pro)  # dumps
+    # # with open('test_data.txt', 'w+', encoding='utf-8') as f:
+    # #     f.write(json_str)
+    #
+    # pp = {}
+    # xt = list(jieba.cut(x_test[0]))
+    # for j in range(10):
+    #     p = 1
+    #     for i in range(0, len(xt)):
+    #         if xt[i] in con_pro[j]:
+    #             p *= con_pro[j][xt[i]]
+    #     pp.update({j: p})
+    # ret = max(pp, key=lambda x: x)
+    # print(pp)
+    # print(ret)
 
 
 if __name__ == '__main__':
