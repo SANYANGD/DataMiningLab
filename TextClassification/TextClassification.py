@@ -1,3 +1,4 @@
+from collections import Counter
 import pandas as pd
 import jieba
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -5,10 +6,9 @@ from sklearn.metrics import classification_report
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import CountVectorizer
 
-'''数据集划分，k取0-9'''
-
 
 def divide_train_test(k):
+    '''数据集划分，k取0-9'''
     i = 0
     ftest = open('cnews.test.txt', 'w+', encoding='UTF-8')
     ftrain = open('cnews.train.txt', 'w+', encoding='UTF-8')
@@ -23,18 +23,23 @@ def divide_train_test(k):
     ftest.close()
 
 
-'''结巴分词'''
-
-
 def jieba_cut(data):
-    words = data.apply(lambda x: ' '.join(jieba.cut(x)))
-    return words
-
-
-'''数据加载'''
+    '''结巴分词'''
+    txt_list = [[] for _ in range(10)]
+    stopwords = get_stopword()
+    j = 0
+    for i in range(0, len(data)):
+        txts = jieba.cut(data[i])
+        for word in txts:
+            if word not in stopwords and word != ' ':
+                txt_list[j].append(word)
+        if (i + 1) % 90 == 0:
+            j += 1
+    return txt_list
 
 
 def data_load():
+    '''数据加载'''
     with open('cnews.train.txt', 'r', encoding='utf-8') as f_train:
         train = pd.read_table(f_train, names=['类别', '内容'])
     with open('cnews.test.txt', 'r', encoding='utf-8') as f_test:
@@ -46,43 +51,21 @@ def data_load():
     return x_train, y_train, x_test, y_test
 
 
-'''停词过滤'''
-
-
 def get_stopword():
+    '''停词'''
     with open('cnews.vocab.txt', 'r', encoding='utf-8') as sw:
         sw_list = sw.readlines()
         sws = [x.strip() for x in sw_list]
     return sws
 
-def main():
-    divide_train_test(1)
+
+def main(k):
+    divide_train_test(k)
     x_train, y_train, x_test, y_test = data_load()
 
     train_data = jieba_cut(x_train)
-
-    # stopwords = get_stopword()
-    # tv = TfidfVectorizer(stop_words=stopwords, max_features=5000, lowercase=False)
-    # tv.fit(train_data)
-    #
-    # # 贝叶斯分类
-    # model = MultinomialNB(alpha=0.2)  # 参数自己选,当然也可以不特殊设置
-    # model.fit(tv.transform(jieba_cut(x_train)), y_train)  # 训练
-    # # 结果0.91
-    # print(model.score(tv.transform(jieba_cut(x_test)), y_test))  # 测试
-    # # 打印概率
-    # # model.predict_proba(tv.transform(jieba_cut(x_test)))
-    # print('其他指标:\n', classification_report(y_test, model.predict(tv.transform(jieba_cut(x_test)))))
-
-    # 不用tfidf
-    vec = CountVectorizer()
-    x_train = vec.fit_transform(jieba_cut(x_train))
-    x_test = vec.transform(jieba_cut(x_test))
-    model = MultinomialNB(alpha=0.2)
-    model.fit(x_train, y_train)
-    y_predict = model.predict(x_test)
-    print('其他指标:\n', classification_report(y_test, y_predict))
+    print(len(train_data))
 
 
 if __name__ == '__main__':
-    main()
+    main(1)
