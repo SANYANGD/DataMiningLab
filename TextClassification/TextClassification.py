@@ -31,7 +31,7 @@ def jieba_cut(data):
     for i in range(0, len(data)):
         txts = jieba.cut(data[i])
         for word in txts:
-            if word not in stopwords and word != ' ':
+            if word not in stopwords and word != ' ' and word != '\xa0':
                 txt_list[j].append(word)
         if (i + 1) % 90 == 0:
             j += 1
