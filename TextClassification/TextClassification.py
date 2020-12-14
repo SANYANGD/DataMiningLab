@@ -1,10 +1,6 @@
 from collections import Counter
 import pandas as pd
 import jieba
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import classification_report
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.feature_extraction.text import CountVectorizer
 
 
 def divide_train_test(k):
@@ -67,16 +63,50 @@ def word_frequency(data):
         # 去除值为1的元素
         one = Counter(dict(filter(lambda x: 1 == x[1], c[i].items())))
         c[i] -= one
+        c[i] = dict(c[i])
 
     return c
+
+
+def conditional_probability(data):
+    k = [[] for _ in range(10)]
+    ks = []
+    for i in range(0, 10):
+        k[i] = list(data[i].keys())
+        ks.extend(k[i])
+    k_s = list(set(ks))
+    # 得到训练集中所有的词（已去重）
+
+    # 类别j文档集词列表，词语总数
+    s = [0] * 10
+    for j in range(0, 10):
+        for dic in data[j]:
+            s[j] += data[dic]
+
+    # 类别m文档  条件概率
+    p = [[] for _ in len(k_s)]
+    for m in range(0, len(data)):
+        for n in range(0, len(k[m])):
+            p[m][n] = (data[m][k[m][n]] + 1) / (len(k_s) + s[m])
+        for o in range(len(k[m]), len(k_s)):
+            p[m][o] = 1 / (len(k_s) + s[m])
+
+    return p
 
 
 def main(k):
     divide_train_test(k)
     x_train, y_train, x_test, y_test = data_load()
     train_data = jieba_cut(x_train)
+
+    # 得到10种类别训练集的dict
+    # count[ dict * 10 ]
     count = word_frequency(train_data)
-    print(count[1])
+
+    # 条件概率 con_pro[1-10][ 词 ]
+    con_pro = conditional_probability(count)
+
+    print(con_pro)
 
 
 if __name__ == '__main__':
