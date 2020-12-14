@@ -87,7 +87,7 @@ def conditional_probability(data):
     p = [[] for _ in range(0, 10)]
     for m in range(0, len(data)):
         for n in range(0, len(k[m])):
-            p[m].append((data[m][k[m][n]] + 1) / (len(k_s) + s[m]))
+            p[m].append(dict(k[m][n], (data[m][k[m][n]] + 1) / (len(k_s) + s[m])))
         for o in range(len(k[m]), len(k_s)):
             p[m].append(1 / (len(k_s) + s[m]))
 
@@ -105,8 +105,13 @@ def main(k):
 
     # 条件概率 con_pro[1-10][ 词 ]
     con_pro = conditional_probability(count)
-
-    print(con_pro)
+    with open('model.txt', 'w+', encoding='UTF-8') as f:
+        for i in range(len(con_pro)):
+            for j in range(len(con_pro[i])):
+                f.write(str(con_pro[i][j]))
+                f.write(',')
+            f.write('\n')
+    print(con_pro[0])
 
 
 if __name__ == '__main__':
