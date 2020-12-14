@@ -59,12 +59,24 @@ def get_stopword():
     return sws
 
 
+def word_frequency(data):
+    c = [[] for _ in range(10)]
+    for i in range(0, len(data)):
+        c[i] = Counter(data[i])
+
+        # 去除值为1的元素
+        one = Counter(dict(filter(lambda x: 1 == x[1], c[i].items())))
+        c[i] -= one
+
+    return c
+
+
 def main(k):
     divide_train_test(k)
     x_train, y_train, x_test, y_test = data_load()
-
     train_data = jieba_cut(x_train)
-    print(len(train_data))
+    count = word_frequency(train_data)
+    print(count[1])
 
 
 if __name__ == '__main__':
