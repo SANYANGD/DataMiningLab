@@ -81,15 +81,15 @@ def conditional_probability(data):
     s = [0] * 10
     for j in range(0, 10):
         for dic in data[j]:
-            s[j] += data[dic]
+            s[j] += data[j][dic]
 
     # 类别m文档  条件概率
-    p = [[] for _ in len(k_s)]
+    p = [[] for _ in range(0, 10)]
     for m in range(0, len(data)):
         for n in range(0, len(k[m])):
-            p[m][n] = (data[m][k[m][n]] + 1) / (len(k_s) + s[m])
+            p[m].append((data[m][k[m][n]] + 1) / (len(k_s) + s[m]))
         for o in range(len(k[m]), len(k_s)):
-            p[m][o] = 1 / (len(k_s) + s[m])
+            p[m].append(1 / (len(k_s) + s[m]))
 
     return p
 
