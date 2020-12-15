@@ -33,6 +33,7 @@ def jieba_cut(data):
                 txt_list[j].append(word)
         if (i + 1) % 90 == 0:
             j += 1
+    # [[分词结果]*10]
     return txt_list
 
 
@@ -62,10 +63,10 @@ def word_frequency(data):
     for i in range(0, len(data)):
         c[i] = Counter(data[i])
 
-        # 去除值为1的元素
-        one = Counter(dict(filter(lambda x: 1 == x[1], c[i].items())))
-        c[i] -= one
-        c[i] = dict(c[i])
+        # # 去除值为1的元素
+        # one = Counter(dict(filter(lambda x: 1 == x[1], c[i].items())))
+        # c[i] -= one
+        # c[i] = dict(c[i])
 
     return c
 
@@ -93,41 +94,53 @@ def conditional_probability(data):
     for m in range(0, len(data)):
         for n in range(0, len(k_s)):
             if k_s[n] not in data[m]:
-                p[m].update({k_s[n]: (1 / (len(k_s) + s[m]))})
+                p[m].update({k_s[n]: math.log(1 / (len(k_s) + s[m]))})
             else:
-                p[m].update({k_s[n]: ((data[m][k_s[n]] + 1) / (len(k_s) + s[m]))})
+                p[m].update({k_s[n]: math.log((data[m][k_s[n]] + 1) / (len(k_s) + s[m]))})
 
     return p
+
+
+def test_data(c_p, t):
+    pp = [{} for _ in range(len(t))]
+    xt = [[] for _ in range(len(t))]
+    right = []
+    # 100个测试文本
+    for i in range(len(t)):
+        xt[i] = list(jieba.cut(t[i]))
+        # 某一测试文本对应10个类的后验概率
+        for j in range(10):
+            p = 1
+            for k in xt[i]:
+                if k in c_p[j]:
+                    p *= c_p[j][k]
+            pp[i].update({j: p})
+        right.append(max(pp[i], key=pp[i].get))
+    # print(pp)
+    for i in range(len(right)):
+        print(right[i], end=' ')
+        if (i + 1) % 90 == 0:
+            print(' ')
 
 
 def main(k):
     divide_train_test(k)
     x_train, y_train, x_test, y_test = data_load()
-    print(x_train[44])
-    print(y_train[44])
-    # train_data = jieba_cut(x_train)
-    #
-    # # 得到10种类别训练集的dict
-    # # count[ dict * 10 ]
-    # count = word_frequency(train_data)
-    #
-    # # 条件概率 con_pro[1-10][ 词 ]
-    # con_pro = conditional_probability(count)
-    # # json_str = json.dumps(con_pro)  # dumps
-    # # with open('test_data.txt', 'w+', encoding='utf-8') as f:
-    # #     f.write(json_str)
-    #
-    # pp = {}
-    # xt = list(jieba.cut(x_test[0]))
-    # for j in range(10):
-    #     p = 1
-    #     for i in range(0, len(xt)):
-    #         if xt[i] in con_pro[j]:
-    #             p *= con_pro[j][xt[i]]
-    #     pp.update({j: p})
-    # ret = max(pp, key=lambda x: x)
-    # print(pp)
-    # print(ret)
+    tag = ['体育', '娱乐', '家居', '房产', '教育', '时尚', '时政', '游戏', '科技', '财经']
+
+    train_data = jieba_cut(x_train)
+
+    # 得到10种类别训练集的dict
+    # count[ dict * 10 ]
+    count = word_frequency(train_data)
+
+    # 条件概率 con_pro[1-10]{词：条件概率}
+    con_pro = conditional_probability(count)
+    # json_str = json.dumps(con_pro)  # dumps
+    # with open('test_data.txt', 'w+', encoding='utf-8') as f:
+    #     f.write(json_str)
+
+    test_data(con_pro, x_train)
 
 
 if __name__ == '__main__':
