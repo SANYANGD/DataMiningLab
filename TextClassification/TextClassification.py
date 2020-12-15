@@ -159,7 +159,6 @@ def evaluate(predict, real):
     #     recall[i] = 0
 
 
-
 def main(k):
     divide_train_test(k)
     x_train, y_train, x_test, y_test = data_load()
