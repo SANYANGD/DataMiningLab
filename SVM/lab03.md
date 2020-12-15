@@ -8,6 +8,5 @@
 （1）给出十折交叉验证的分类Accuracy、Precision、Recall和F1-Value。\
 （2）数据集：http://archive.ics.uci.edu/ml/datasets/Heart+failure+clinical+records
 
-
 ## 程序设计语言
    C、C++、Java或Python
