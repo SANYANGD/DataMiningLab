@@ -3,6 +3,7 @@ import pandas as pd
 import jieba
 import json
 import math
+from sklearn.metrics import classification_report
 
 
 def divide_train_test(k):
@@ -104,7 +105,8 @@ def conditional_probability(data):
 def test_data(c_p, t):
     pp = [{} for _ in range(len(t))]
     xt = [[] for _ in range(len(t))]
-    right = []
+    tag = ['体育', '娱乐', '家居', '房产', '教育', '时尚', '时政', '游戏', '科技', '财经']
+    t_tag = []
     # 100个测试文本
     for i in range(len(t)):
         xt[i] = list(jieba.cut(t[i]))
@@ -114,34 +116,74 @@ def test_data(c_p, t):
             for k in xt[i]:
                 if k in c_p[j]:
                     p *= c_p[j][k]
-            pp[i].update({j: p})
-        right.append(max(pp[i], key=pp[i].get))
-    # print(pp)
-    for i in range(len(right)):
-        print(right[i], end=' ')
-        if (i + 1) % 90 == 0:
-            print(' ')
+            pp[i].update({tag[j]: p})
+        t_tag.append(max(pp[i], key=pp[i].get))
+    return t_tag
+
+
+def evaluate(predict, real):
+    #                                                  predict
+    #                 '体育', '娱乐', '家居', '房产', '教育', '时尚', '时政', '游戏', '科技', '财经'
+    #           '体育',
+    #           '娱乐',
+    #           '家居',
+    #           '房产',
+    #           '教育',
+    #   real    '时尚',
+    #           '时政',
+    #           '游戏',
+    #           '科技',
+    #           '财经',
+    e = [[0 for col in range(10)] for row in range(10)]
+    n = -1
+    for m in range(len(predict)):
+        if m % 10 == 0: n += 1
+        if predict[m] == '体育': e[n][0] += 1
+        if predict[m] == '娱乐': e[n][1] += 1
+        if predict[m] == '家居': e[n][2] += 1
+        if predict[m] == '房产': e[n][3] += 1
+        if predict[m] == '教育': e[n][4] += 1
+        if predict[m] == '时尚': e[n][5] += 1
+        if predict[m] == '时政': e[n][6] += 1
+        if predict[m] == '游戏': e[n][7] += 1
+        if predict[m] == '科技': e[n][8] += 1
+        if predict[m] == '财经': e[n][9] += 1
+
+    # accuracy = [0 for col in range(10)]
+    # precision = [0 for col in range(10)]
+    # recall = [0 for col in range(10)]
+    # f1 = [0 for col in range(10)]
+    # for i in range(10):
+    #     accuracy[i] = 0
+    #     precision[i] = 0
+    #     recall[i] = 0
+
 
 
 def main(k):
     divide_train_test(k)
     x_train, y_train, x_test, y_test = data_load()
-    tag = ['体育', '娱乐', '家居', '房产', '教育', '时尚', '时政', '游戏', '科技', '财经']
 
     train_data = jieba_cut(x_train)
 
-    # 得到10种类别训练集的dict
-    # count[ dict * 10 ]
+    # 得到10种类别训练集的dict , count[ dict * 10 ]
     count = word_frequency(train_data)
 
     # 条件概率 con_pro[1-10]{词：条件概率}
     con_pro = conditional_probability(count)
-    # json_str = json.dumps(con_pro)  # dumps
-    # with open('test_data.txt', 'w+', encoding='utf-8') as f:
-    #     f.write(json_str)
 
-    test_data(con_pro, x_train)
+    # 输出测试的tag
+    test_tag = test_data(con_pro, x_test)
+    print(classification_report(y_test, test_tag))
+
+    # evaluate(test_tag, y_test)
+
+    # for i in range(len(test_tag)):
+    #     print(test_tag[i], end=' ')
+    #     if (i + 1) % 10 == 0:
+    #         print(' ')
 
 
 if __name__ == '__main__':
-    main(1)
+    for k in range(10):
+        main(k)
