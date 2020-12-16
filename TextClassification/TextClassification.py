@@ -114,9 +114,12 @@ def test_data(c_p, t):
         # 某一测试文本对应10个类的后验概率
         for j in range(10):
             p = 1
-            for k in xt[i]:
+            # for k in xt[i]:
+            # 优化正确率，dict(Counter(xt[i]).most_common(30)).keys()表示只计算测试文本中最常见的30个词
+            for k in dict(Counter(xt[i]).most_common(50)).keys():
                 if k in c_p[j]:
-                    p *= c_p[j][k]
+                    for number in range(Counter(xt[i])[k]):
+                        p *= c_p[j][k]
             pp[i].update({tag[j]: p})
         t_tag.append(max(pp[i], key=pp[i].get))
     return t_tag
@@ -150,14 +153,14 @@ def evaluate(predict, real):
         if predict[m] == '科技': e[n][8] += 1
         if predict[m] == '财经': e[n][9] += 1
 
-    # accuracy = [0 for col in range(10)]
-    # precision = [0 for col in range(10)]
-    # recall = [0 for col in range(10)]
-    # f1 = [0 for col in range(10)]
-    # for i in range(10):
-    #     accuracy[i] = 0
-    #     precision[i] = 0
-    #     recall[i] = 0
+    accuracy = [0 for col in range(10)]
+    precision = [0 for col in range(10)]
+    recall = [0 for col in range(10)]
+    f1 = [0 for col in range(10)]
+    for i in range(10):
+        accuracy[i] = 0
+        precision[i] = 0
+        recall[i] = 0
 
 
 def main(k):
@@ -178,7 +181,6 @@ def main(k):
 
     ri = classification_report(y_test, test_tag)
     print(ri)
-    return ri, y_test, test_tag
 
     # evaluate(test_tag, y_test)
 
@@ -186,6 +188,8 @@ def main(k):
     #     print(test_tag[i], end=' ')
     #     if (i + 1) % 10 == 0:
     #         print(' ')
+
+    return ri, y_test, test_tag
 
 
 if __name__ == '__main__':
