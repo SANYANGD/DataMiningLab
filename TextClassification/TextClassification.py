@@ -162,6 +162,7 @@ def evaluate(predict, real):
 def main(k):
     divide_train_test(k)
     x_train, y_train, x_test, y_test = data_load()
+    tag = ['体育', '娱乐', '家居', '房产', '教育', '时尚', '时政', '游戏', '科技', '财经']
 
     train_data = jieba_cut(x_train)
 
@@ -173,7 +174,10 @@ def main(k):
 
     # 输出测试的tag
     test_tag = test_data(con_pro, x_test)
-    print(classification_report(y_test, test_tag))
+
+    ri = classification_report(y_test, test_tag)
+    print(ri)
+    return ri, y_test, test_tag
 
     # evaluate(test_tag, y_test)
 
@@ -184,5 +188,12 @@ def main(k):
 
 
 if __name__ == '__main__':
+    result = [[] for row in range(10)]
+    real = []
+    predict = []
     for k in range(10):
-        main(k)
+        result[k], r, p = main(k)
+        real.extend(r)
+        predict.extend(p)
+    a = classification_report(real, predict)
+    print(a)
