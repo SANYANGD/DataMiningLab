@@ -64,10 +64,11 @@ def word_frequency(data):
     for i in range(0, len(data)):
         c[i] = Counter(data[i])
 
-        # # 去除值为1的元素
-        # one = Counter(dict(filter(lambda x: 1 == x[1], c[i].items())))
-        # c[i] -= one
-        # c[i] = dict(c[i])
+        # 去除值为1的元素
+        d = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        delete = Counter(dict(filter(lambda x: x[1] in d, c[i].items())))
+        c[i] -= delete
+        c[i] = dict(c[i])
 
     return c
 
@@ -79,7 +80,7 @@ def conditional_probability(data):
         k[i] = list(data[i].keys())
         ks.extend(k[i])
     k_s = list(set(ks))
-    # for i in ks:
+    # for i in k_s:
     #     if not i in k_s:  # 去重
     #         k_s.append(i)
     # 得到训练集中所有的词（已去重）
@@ -188,6 +189,10 @@ def main(k):
 
 
 if __name__ == '__main__':
+    # True Positive (TP): 把正样本成功预测为正。
+    # True Negative (TN)：把负样本成功预测为负。
+    # False Positive (FP)：把负样本错误地预测为正。
+    # False Negative (FN)：把正样本错误的预测为负。
     result = [[] for row in range(10)]
     real = []
     predict = []
