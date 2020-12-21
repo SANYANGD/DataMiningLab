@@ -29,9 +29,12 @@ y = cv2.filter2D(binary, cv2.CV_16S, kernely)
 absX = cv2.convertScaleAbs(x)
 absY = cv2.convertScaleAbs(y)
 Prewitt = cv2.addWeighted(absX, 0.5, absY, 0.5, 0)
-# Laplacian算子
-dst = cv2.Laplacian(binary, cv2.CV_16S, ksize=3)
-Laplacian = cv2.convertScaleAbs(dst)
+# Sobel算子
+x = cv2.Sobel(binary, cv2.CV_16S, 1, 0)
+y = cv2.Sobel(binary, cv2.CV_16S, 0, 1)
+absX = cv2.convertScaleAbs(x)
+absY = cv2.convertScaleAbs(y)
+Sobel = cv2.addWeighted(absX, 0.5, absY, 0.5, 0)
 
 # 用来正常显示中文标签
 plt.rcParams['font.sans-serif'] = ['SimHei']
@@ -40,5 +43,5 @@ plt.subplot(231), plt.imshow(img_RGB), plt.title('原始图像'), plt.axis('off'
 plt.subplot(232), plt.imshow(binary, cmap=plt.cm.gray), plt.title('二值图'), plt.axis('off')
 plt.subplot(234), plt.imshow(Roberts, cmap=plt.cm.gray), plt.title('Roberts算子'), plt.axis('off')
 plt.subplot(235), plt.imshow(Prewitt, cmap=plt.cm.gray), plt.title('Prewitt算子'), plt.axis('off')
-plt.subplot(236), plt.imshow(Laplacian, cmap=plt.cm.gray), plt.title('Laplacian算子'), plt.axis('off')
+plt.subplot(236), plt.imshow(Sobel, cmap=plt.cm.gray), plt.title('Sobel算子'), plt.axis('off')
 plt.show()
