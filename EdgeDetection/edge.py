@@ -38,7 +38,7 @@ plt.rcParams['font.sans-serif'] = ['SimHei']
 # 显示图形
 plt.subplot(231), plt.imshow(img_RGB), plt.title('原始图像'), plt.axis('off')  # 坐标轴关闭
 plt.subplot(232), plt.imshow(binary, cmap=plt.cm.gray), plt.title('二值图'), plt.axis('off')
-plt.subplot(233), plt.imshow(Roberts, cmap=plt.cm.gray), plt.title('Roberts算子'), plt.axis('off')
-plt.subplot(234), plt.imshow(Prewitt, cmap=plt.cm.gray), plt.title('Prewitt算子'), plt.axis('off')
-plt.subplot(235), plt.imshow(Laplacian, cmap=plt.cm.gray), plt.title('Laplacian算子'), plt.axis('off')
+plt.subplot(234), plt.imshow(Roberts, cmap=plt.cm.gray), plt.title('Roberts算子'), plt.axis('off')
+plt.subplot(235), plt.imshow(Prewitt, cmap=plt.cm.gray), plt.title('Prewitt算子'), plt.axis('off')
+plt.subplot(236), plt.imshow(Laplacian, cmap=plt.cm.gray), plt.title('Laplacian算子'), plt.axis('off')
 plt.show()
