@@ -1,10 +1,11 @@
 
 import time
-from sklearn.metrics import classification_report
 import numpy as np
+from sklearn.datasets import make_blobs
+from sklearn.metrics import classification_report
 
 
-def loaddata(remainder):
+def load_data(remainder):
     filepath = 'dataset.csv'
     data = np.loadtxt(filepath, dtype=np.float, delimiter=',', usecols=range(12), encoding='utf-8')
     data_tag = np.loadtxt(filepath, dtype=np.int, delimiter=',', usecols=12, encoding='utf-8')
@@ -20,13 +21,13 @@ def loaddata(remainder):
     return np.asarray(x_train), np.asarray(y_train), np.asarray(x_test), np.asarray(y_test)
 
 
-class SMOStruct:
+class SVM_SMO:
 
     # 按照John Platt的论文构造SMO的数据结构
     def __init__(self, X, y, kernel):
         self.X = X  # 训练样本
         self.y = y  # 类别 label
-        self.C = 20  # 正则化常量，调整（过）拟合的程度
+        self.C = 5  # 正则化常量，调整（过）拟合的程度
         self.kernel = kernel  # 核函数，高斯（RBF）
         self.m, self.n = np.shape(self.X)  # 训练集大小（m）和特征数（n）
         self.alphas = np.zeros(self.m)  # 拉格朗日乘子，与样本一一相对
@@ -57,6 +58,7 @@ def decision_function(model, test=-1, i=-1):
         test_l = test
     # 将决策函数应用于'x_test'中的输入特征向量
     result = (model.alphas * model.y).dot(model.kernel(model.X, test_l)) - model.b
+
     return result
 
 
@@ -171,11 +173,11 @@ def take_step(i1, i2, model):
     return 1, model
 
 
-def get_error(model, i1):
-    if 0 < model.alphas[i1] < model.C:
-        return model.errors[i1]
+def get_error(model, i):
+    if 0 < model.alphas[i] < model.C:
+        return model.errors[i]
     else:
-        return decision_function(model=model, i=i1) - model.y[i1]
+        return decision_function(model=model, i=i) - model.y[i]
 
 
 def examine_example(i2, model):
@@ -184,14 +186,13 @@ def examine_example(i2, model):
     E2 = get_error(model, i2)
     r2 = E2 * y2
 
-    # 重点：确定 alpha1, 也就是old a1，并送到take_step去analytically优化
+    # 确定alpha1, 也就是old alpha1，并送到take_step优化
     # 下面条件之一满足，进入if开始找第二个alpha，送到take_step进行优化
     i1 = 0
     if (r2 < -model.tol and alph2 < model.C) or (r2 > model.tol and alph2 > 0):
         if len(model.alphas[(model.alphas != 0) & (model.alphas != model.C)]) > 1:
-            # 选择Ei矩阵中差值最大的先进性优化
-            # 要想|E1-E2|最大，只需要在E2为正时，选择最小的Ei作为E1
-            # 在E2为负时选择最大的Ei作为E1
+            # 选择Ei矩阵中差值最大的先优化
+            # 要想|E1-E2|最大，只需要在E2为正时，选择最小的Ei作为E1，在E2为负时选择最大的Ei作为E1
             if model.errors[i2] > 0:
                 i1 = np.argmin(model.errors)
             elif model.errors[i2] <= 0:
@@ -202,80 +203,91 @@ def examine_example(i2, model):
                 return 1, model
 
         # 循环所有非0 非C alphas值进行优化，随机选择起始点
-        for i1 in np.roll(np.where((model.alphas != 0) & (model.alphas != model.C))[0],
-                          np.random.choice(np.arange(model.m))):
+        for i1 in np.roll(np.where((model.alphas != 0) & (model.alphas != model.C))[0], np.random.choice(np.arange(model.m))):
             step_result, model = take_step(i1, i2, model)
             if step_result:
                 return 1, model
 
         # a2确定的情况下，如何选择a1? 循环所有(m-1) alphas, 随机选择起始点
         for i1 in np.roll(np.arange(model.m), np.random.choice(np.arange(model.m))):
-            # print("what is the first i1",i1)
             step_result, model = take_step(i1, i2, model)
-
             if step_result:
                 return 1, model
-    # 先看最上面的if语句，如果if条件不满足，说明KKT条件已满足，找其它样本进行优化，则执行下面这句，退出
+    # 先看最上面的if语句，如果if条件不满足，说明KKT条件已满足，找其它样本进行优化，退出
     return 0, model
 
 
 def fit(model):
-    numChanged = 0
-    examineAll = 1
+    num_changed = 0
+    exam_all = 1
 
     # 计数器，记录优化时的循环次数
-    loopnum = 0
-    loopnum1 = 0
-    loopnum2 = 0
+    loop_num = 0
+    loop_num1 = 0
+    loop_num2 = 0
 
-    # 当numChanged = 0 and examineAll = 0时 循环退出
-    # 实际是顺序地执行完所有的样本，也就是第一个if中的循环，
-    # 并且 else中的循环没有可优化的alpha，目标函数收敛了： 在容差之内，并且满足KKT条件
-    # 则循环退出，如果执行3000次循环仍未收敛，也退出
-    # 重点：这段的重点在于确定 alpha2，也就是old a 2, 或者说alpha2的下标，old a2和old a1都是heuristically 选择
-    while (numChanged > 0) or examineAll:
-        numChanged = 0
-        if loopnum == 1000:
+    # num_changed = 0, exam_all = 0时 循环退出
+    # 顺序执行所有样本(第一个if中的循环)，且else中的循环没有可优化的alpha，目标函数收敛了：
+    # 在容差之内，并且满足KKT条件则循环退出; 如果执行loop_num次仍未收敛，也退出。
+    # 重点在于确定old alpha2的下标，old alpha2和old alpha1都是启发式的选择
+    while (num_changed > 0) or exam_all:
+        num_changed = 0
+        if loop_num == 500:
             break
-        loopnum = loopnum + 1
-        if examineAll:
-            loopnum1 = loopnum1 + 1  # 记录顺序一个一个选择alpha2时的循环次数
-            # # 从0,1,2,3,...,m顺序选择a2的，送给examine_example选择alpha1，总共m(m-1)种选法
+        loop_num += 1
+        if exam_all:
+            loop_num1 += 1  # 记录顺序选择alpha2时的循环次数
+            # 顺序选择a2的，送给examine_example选择alpha1
             for i in range(model.alphas.shape[0]):
                 examine_result, model = examine_example(i, model)
-                numChanged += examine_result
-        else:  # 上面if里m(m-1)执行完的后执行
-            loopnum2 = loopnum2 + 1
+                num_changed += examine_result
+        else:  # 上面if执行完后执行
+            loop_num2 += 1
             # 遍历alpha尚未达到极限
             for i in np.where((model.alphas != 0) & (model.alphas != model.C))[0]:
                 examine_result, model = examine_example(i, model)
-                numChanged += examine_result
-        if examineAll == 1:
-            examineAll = 0
-        elif numChanged == 0:
-            examineAll = 1
-    # print("loopnum012", loopnum, ":", loopnum1, ":", loopnum2)
-    return model
+                num_changed += examine_result
+        if exam_all == 1:
+            exam_all = 0
+        elif num_changed == 0:
+            exam_all = 1
+    # print(loop_num, ',', loop_num1, ',', loop_num2)
+    # return model
+
+
+# 判别函数
+def classification(model, test):
+    i = 0
+    x = []
+    for a in model.alphas:
+        if a >= 0:
+            bs = model.y[i] - (model.alphas * model.y).dot(model.kernel(model.X, model.X[i]))
+            x.append(bs)
+        i += 1
+    # 将决策函数应用于'x_test'中的输入特征向量
+    return (model.alphas * model.y).dot(model.kernel(model.X, test)) + (sum(x)/len(x))  # model.b
 
 
 def main(remainder):
     # 获取数据
-    x_train, y_train, x_test, y_test = loaddata(remainder)
+    x_train, y_train, x_test, y_test = load_data(remainder)
+    # x_train, y_train = make_blobs(n_samples=400, centers=2, n_features=12, random_state=2)
+    # x_test, y_test = make_blobs(n_samples=20, centers=2, n_features=12, random_state=2)
 
     # 实例化模型
-    model = SMOStruct(X=x_train, y=y_train, kernel=gaussian_kernel)
+    svm_model = SVM_SMO(X=x_train, y=y_train, kernel=gaussian_kernel)
 
     # 初始化E
-    initial_error = decision_function(model=model, test=model.X) - model.y
-    model.errors = initial_error
+    initial_error = decision_function(model=svm_model, test=svm_model.X) - svm_model.y
+    svm_model.errors = initial_error
 
     # 训练模型
-    fit(model)
+    fit(svm_model)
 
-    predict = decision_function(model, test=x_test)
+    predict = classification(svm_model, test=x_test)
     predict[predict < 0] = -1
     predict[predict > 0] = 1
-    predict(classification_report(y_test, predict))
+    print(classification_report(y_test, predict))
 
     return y_test, predict
 
