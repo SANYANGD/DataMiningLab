@@ -1,3 +1,6 @@
+
+import time
+from sklearn.metrics import classification_report
 import numpy as np
 
 
@@ -20,22 +23,23 @@ def loaddata(remainder):
 class SMOStruct:
 
     # 按照John Platt的论文构造SMO的数据结构
-    def __init__(self, X, y, C, kernel, tol, eps):
+    def __init__(self, X, y, kernel):
         self.X = X  # 训练样本
         self.y = y  # 类别 label
-        self.C = C  # 正则化常量，调整（过）拟合的程度
+        self.C = 20  # 正则化常量，调整（过）拟合的程度
         self.kernel = kernel  # 核函数，高斯（RBF）
         self.m, self.n = np.shape(self.X)  # 训练集大小（m）和特征数（n）
         self.alphas = np.zeros(self.m)  # 拉格朗日乘子，与样本一一相对
         self.b = 0.0  # B
         self.errors = np.zeros(self.m)  # E 用于存储alpha值实际与预测值得差值，与样本数量一一相对
         self.w = np.zeros(self.n)  # 初始化权重w的值，主要用于线性核函数
-        self.tol = tol
-        self.eps = eps  # error tolerance
+        self.tol = 0.01
+        self.eps = 0.01  # error tolerance
 
 
 def gaussian_kernel(x, y, sigma=1):
     # 高斯核函数 返回参数为sigma的数组x和y的高斯相似度
+    result = 0
     if np.ndim(x) == 1 and np.ndim(y) == 1:
         result = np.exp(-(np.linalg.norm(x - y, 2)) ** 2 / (2 * sigma ** 2))
     elif (np.ndim(x) > 1 and np.ndim(y) == 1) or (np.ndim(x) == 1 and np.ndim(y) > 1):
@@ -45,16 +49,14 @@ def gaussian_kernel(x, y, sigma=1):
     return result
 
 
-# 判别函数一，用于单一样本
-def decision_function_output(model, i):
-    return np.sum(
-        [model.alphas[j] * model.y[j] * model.kernel(model.X[j], model.X[i]) for j in range(model.m)]) - model.b
-
-
-# 判别函数二，用于多个样本
-def decision_function(alphas, target, kernel, x_train, x_test, b):
+# 判别函数
+def decision_function(model, test=-1, i=-1):
+    if i is not -1:
+        test_l = model.X[test]
+    else:
+        test_l = test
     # 将决策函数应用于'x_test'中的输入特征向量
-    result = (alphas * target).dot(kernel(x_train, x_test)) - b
+    result = (model.alphas * model.y).dot(model.kernel(model.X, test_l)) - model.b
     return result
 
 
@@ -76,6 +78,7 @@ def take_step(i1, i2, model):
     E2 = get_error(model, i2)
     s = y1 * y2
 
+    L, H = 0, 0
     # 计算alpha的边界，L, H
     if y1 != y2:
         # y1,y2 异号，使用 Equation (J13)
@@ -172,7 +175,7 @@ def get_error(model, i1):
     if 0 < model.alphas[i1] < model.C:
         return model.errors[i1]
     else:
-        return decision_function_output(model, i1) - model.y[i1]
+        return decision_function(model=model, i=i1) - model.y[i1]
 
 
 def examine_example(i2, model):
@@ -183,6 +186,7 @@ def examine_example(i2, model):
 
     # 重点：确定 alpha1, 也就是old a1，并送到take_step去analytically优化
     # 下面条件之一满足，进入if开始找第二个alpha，送到take_step进行优化
+    i1 = 0
     if (r2 < -model.tol and alph2 < model.C) or (r2 > model.tol and alph2 > 0):
         if len(model.alphas[(model.alphas != 0) & (model.alphas != model.C)]) > 1:
             # 选择Ei矩阵中差值最大的先进性优化
@@ -231,7 +235,7 @@ def fit(model):
     # 重点：这段的重点在于确定 alpha2，也就是old a 2, 或者说alpha2的下标，old a2和old a1都是heuristically 选择
     while (numChanged > 0) or examineAll:
         numChanged = 0
-        if loopnum == 2000:
+        if loopnum == 1000:
             break
         loopnum = loopnum + 1
         if examineAll:
@@ -259,17 +263,29 @@ def main(remainder):
     x_train, y_train, x_test, y_test = loaddata(remainder)
 
     # 实例化模型
-    model = SMOStruct(X=x_train, y=y_train, C=20.0, kernel=gaussian_kernel, tol=0.01, eps=0.01)
+    model = SMOStruct(X=x_train, y=y_train, kernel=gaussian_kernel)
 
     # 初始化E
-    initial_error = decision_function(model.alphas, model.y, model.kernel, model.X, model.X, model.b) - model.y
+    initial_error = decision_function(model=model, test=model.X) - model.y
     model.errors = initial_error
 
     # 训练模型
     fit(model)
 
-    print(model.alphas)
+    predict = decision_function(model, test=x_test)
+    predict[predict < 0] = -1
+    predict[predict > 0] = 1
+    predict(classification_report(y_test, predict))
+
+    return y_test, predict
 
 
 if __name__ == '__main__':
-    main(0)
+    real = []
+    predict = []
+    for i in range(10):
+        r, p = main(i)
+        real.extend(r)
+        predict.extend(p)
+    print(classification_report(real, predict))
+
