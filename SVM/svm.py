@@ -47,13 +47,14 @@ def gaussian_kernel(x, y, sigma=1):
 
 # 判别函数一，用于单一样本
 def decision_function_output(model, i):
-    return np.sum([model.alphas[j] * model.y[j] * model.kernel(model.X[j], model.X[i]) for j in range(model.m)]) - model.b
+    return np.sum(
+        [model.alphas[j] * model.y[j] * model.kernel(model.X[j], model.X[i]) for j in range(model.m)]) - model.b
 
 
 # 判别函数二，用于多个样本
-def decision_function(alphas, target, kernel, X_train, x_test, b):
+def decision_function(alphas, target, kernel, x_train, x_test, b):
     # 将决策函数应用于'x_test'中的输入特征向量
-    result = (alphas * target).dot(kernel(X_train, x_test)) - b
+    result = (alphas * target).dot(kernel(x_train, x_test)) - b
     return result
 
 
@@ -76,15 +77,15 @@ def take_step(i1, i2, model):
     s = y1 * y2
 
     # 计算alpha的边界，L, H
-    if (y1 != y2):
+    if y1 != y2:
         # y1,y2 异号，使用 Equation (J13)
         L = max(0, alph2 - alph1)
         H = min(model.C, model.C + alph2 - alph1)
-    elif (y1 == y2):
+    elif y1 == y2:
         # y1,y2 同号，使用 Equation (J14)
         L = max(0, alph1 + alph2 - model.C)
         H = min(model.C, alph1 + alph2)
-    if (L == H):
+    if L == H:
         return 0, model
 
     # 分别计算啊样本1, 2对应的核函数组合，目的在于计算eta 也就是求一阶导数后的值，目的在于计算a2new
@@ -95,15 +96,15 @@ def take_step(i1, i2, model):
     eta = k11 + k22 - 2 * k12
 
     # 如论文中所述，分两种情况根据eta为正positive 还是为负或0来计算计算a2 new
-    if (eta > 0):
+    if eta > 0:
         # equation (J16) 计算alpha2
         a2 = alph2 + y2 * (E1 - E2) / eta
         # 把a2夹到限定区间 equation （J17）
         if L < a2 < H:
             a2 = a2
-        elif (a2 <= L):
+        elif a2 <= L:
             a2 = L
-        elif (a2 >= H):
+        elif a2 >= H:
             a2 = H
     # 如果eta不为正（为负或0）
     else:
@@ -131,7 +132,7 @@ def take_step(i1, i2, model):
     elif a2 > (model.C - 1e-8):
         a2 = model.C
     # 超过容差仍不能优化时，跳过
-    if (np.abs(a2 - alph2) < model.eps * (a2 + alph2 + model.eps)):
+    if np.abs(a2 - alph2) < model.eps * (a2 + alph2 + model.eps):
         return 0, model
 
     # 根据新 a2计算 新 a1 Equation(J18)
@@ -143,9 +144,9 @@ def take_step(i1, i2, model):
     b2 = E2 + y1 * (a1 - alph1) * k12 + y2 * (a2 - alph2) * k22 + model.b
 
     # 根据a1、a2和L、H设置新的阈值
-    if 0 < a1 and a1 < model.C:
+    if 0 < a1 < model.C:
         b_new = b1
-    elif 0 < a2 and a2 < model.C:
+    elif 0 < a2 < model.C:
         b_new = b2
     else:
         b_new = (b1 + b2) * 0.5
@@ -162,7 +163,7 @@ def take_step(i1, i2, model):
     for i in range(model.m):
         if 0 < model.alphas[i] < model.C:
             model.errors[i] += y1 * (a1 - alph1) * model.kernel(model.X[i1], model.X[i]) + y2 * (
-                        a2 - alph2) * model.kernel(model.X[i2], model.X[i]) + model.b - b_new
+                    a2 - alph2) * model.kernel(model.X[i2], model.X[i]) + model.b - b_new
 
     return 1, model
 
@@ -182,7 +183,7 @@ def examine_example(i2, model):
 
     # 重点：确定 alpha1, 也就是old a1，并送到take_step去analytically优化
     # 下面条件之一满足，进入if开始找第二个alpha，送到take_step进行优化
-    if ((r2 < -model.tol and alph2 < model.C) or (r2 > model.tol and alph2 > 0)):
+    if (r2 < -model.tol and alph2 < model.C) or (r2 > model.tol and alph2 > 0):
         if len(model.alphas[(model.alphas != 0) & (model.alphas != model.C)]) > 1:
             # 选择Ei矩阵中差值最大的先进性优化
             # 要想|E1-E2|最大，只需要在E2为正时，选择最小的Ei作为E1
@@ -228,7 +229,7 @@ def fit(model):
     # 并且 else中的循环没有可优化的alpha，目标函数收敛了： 在容差之内，并且满足KKT条件
     # 则循环退出，如果执行3000次循环仍未收敛，也退出
     # 重点：这段的重点在于确定 alpha2，也就是old a 2, 或者说alpha2的下标，old a2和old a1都是heuristically 选择
-    while (numChanged > 0) or (examineAll):
+    while (numChanged > 0) or examineAll:
         numChanged = 0
         if loopnum == 2000:
             break
@@ -249,13 +250,13 @@ def fit(model):
             examineAll = 0
         elif numChanged == 0:
             examineAll = 1
-    print("loopnum012", loopnum, ":", loopnum1, ":", loopnum2)
+    # print("loopnum012", loopnum, ":", loopnum1, ":", loopnum2)
     return model
 
 
-if __name__ == '__main__':
+def main(remainder):
     # 获取数据
-    x_train, y_train, x_test, y_test = loaddata(0)
+    x_train, y_train, x_test, y_test = loaddata(remainder)
 
     # 实例化模型
     model = SMOStruct(X=x_train, y=y_train, C=20.0, kernel=gaussian_kernel, tol=0.01, eps=0.01)
@@ -265,6 +266,10 @@ if __name__ == '__main__':
     model.errors = initial_error
 
     # 训练模型
-    svm_model = fit(model)
+    fit(model)
 
-    print(svm_model.alphas-model.alphas)
+    print(model.alphas)
+
+
+if __name__ == '__main__':
+    main(0)
