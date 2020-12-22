@@ -26,12 +26,14 @@ class SMOStruct:
         # self.b = 0
 
 
-def linear_kernel(x, y, b=1):
-    # 线性核函数
+
+def linear_kernel(x,y,b=1):
+    #线性核函数
     """ returns the linear combination of arrays 'x' and 'y' with
     the optional bias term 'b' (set to 1 by default). """
     result = x @ y.T + b
-    return result  # Note the @ operator for matrix multiplications
+    return result # Note the @ operator for matrix multiplications
+
 
 
 def gaussian_kernel(x, y, sigma=1):
