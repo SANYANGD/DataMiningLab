@@ -113,7 +113,7 @@ def take_step(i1, i2, model):
             a2 = H
     # 如果eta不为正（为负或0）
     else:
-        # Equation （J19） 在特殊情况下，eta可能不为正not be positive
+        # Equation （J19） 在特殊情况下，eta可能不为正
         f1 = y1 * (E1 + model.b) - alph1 * k11 - s * alph2 * k12
         f2 = y2 * (E2 + model.b) - s * alph1 * k12 - alph2 * k22
 
@@ -217,7 +217,7 @@ def examine_example(i2, model):
     return 0, model
 
 
-def fit(model):
+def routine(model):
     num_changed = 0
     exam_all = 1
 
@@ -282,7 +282,7 @@ def main(remainder):
     svm_model.errors = initial_error
 
     # 训练模型
-    fit(svm_model)
+    routine(svm_model)
 
     predict = classification(svm_model, test=x_test)
     predict[predict < 0] = -1
