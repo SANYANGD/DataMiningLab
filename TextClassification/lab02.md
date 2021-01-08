@@ -10,3 +10,12 @@
 
 ## 程序设计语言
    C、C++、Java或Python
+
+## 文件说明
+lab02.md - 说明文件\
+TextClassification.py - 代码文件\
+cnews.txt - 原始数据整理后得到的测试集和训练集\
+cnews.test.txt - 由cnews.txt得到的测试集\
+cnews.train.txt - 由cnews.txt得到的训练集\
+cnews.vocab.txt - 停词数据\
+result.txt - 某一次运行得到的实验结果

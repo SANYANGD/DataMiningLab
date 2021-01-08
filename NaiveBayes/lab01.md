@@ -12,3 +12,9 @@
 
 ## 程序设计语言
    C、C++、Java或Python
+   
+## 文件说明
+lab01.md - 说明文件\
+NaineBayes.py - 实验一代码\
+titanic.dat - 原始数据文件\
+titanic.csv - 处理后的数据文件

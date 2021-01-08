@@ -10,3 +10,10 @@
 
 ## 程序设计语言
    C、C++、Java或Python
+
+## 文件说明
+lab03.md - 说明文件\
+svm.py - 代码文件\
+heart_failure_clinical_records_dataset.csv - 原始数据文件\
+dataset.csv - heart_failure_clinical_records_dataset.csv归一化后得到的数据文件\
+result.txt - 某一次运行得到的实验结果

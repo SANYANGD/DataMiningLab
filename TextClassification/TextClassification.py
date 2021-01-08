@@ -125,42 +125,42 @@ def test_data(c_p, t):
     return t_tag
 
 
-def evaluate(predict, real):
-    #                                                  predict
-    #                 '体育', '娱乐', '家居', '房产', '教育', '时尚', '时政', '游戏', '科技', '财经'
-    #           '体育',
-    #           '娱乐',
-    #           '家居',
-    #           '房产',
-    #           '教育',
-    #   real    '时尚',
-    #           '时政',
-    #           '游戏',
-    #           '科技',
-    #           '财经',
-    e = [[0 for col in range(10)] for row in range(10)]
-    n = -1
-    for m in range(len(predict)):
-        if m % 10 == 0: n += 1
-        if predict[m] == '体育': e[n][0] += 1
-        if predict[m] == '娱乐': e[n][1] += 1
-        if predict[m] == '家居': e[n][2] += 1
-        if predict[m] == '房产': e[n][3] += 1
-        if predict[m] == '教育': e[n][4] += 1
-        if predict[m] == '时尚': e[n][5] += 1
-        if predict[m] == '时政': e[n][6] += 1
-        if predict[m] == '游戏': e[n][7] += 1
-        if predict[m] == '科技': e[n][8] += 1
-        if predict[m] == '财经': e[n][9] += 1
-
-    accuracy = [0 for col in range(10)]
-    precision = [0 for col in range(10)]
-    recall = [0 for col in range(10)]
-    f1 = [0 for col in range(10)]
-    for i in range(10):
-        accuracy[i] = 0
-        precision[i] = 0
-        recall[i] = 0
+# def evaluate(predict, real):
+#     #                                                  predict
+#     #                 '体育', '娱乐', '家居', '房产', '教育', '时尚', '时政', '游戏', '科技', '财经'
+#     #           '体育',
+#     #           '娱乐',
+#     #           '家居',
+#     #           '房产',
+#     #           '教育',
+#     #   real    '时尚',
+#     #           '时政',
+#     #           '游戏',
+#     #           '科技',
+#     #           '财经',
+#     e = [[0 for col in range(10)] for row in range(10)]
+#     n = -1
+#     for m in range(len(predict)):
+#         if m % 10 == 0: n += 1
+#         if predict[m] == '体育': e[n][0] += 1
+#         if predict[m] == '娱乐': e[n][1] += 1
+#         if predict[m] == '家居': e[n][2] += 1
+#         if predict[m] == '房产': e[n][3] += 1
+#         if predict[m] == '教育': e[n][4] += 1
+#         if predict[m] == '时尚': e[n][5] += 1
+#         if predict[m] == '时政': e[n][6] += 1
+#         if predict[m] == '游戏': e[n][7] += 1
+#         if predict[m] == '科技': e[n][8] += 1
+#         if predict[m] == '财经': e[n][9] += 1
+#
+#     accuracy = [0 for col in range(10)]
+#     precision = [0 for col in range(10)]
+#     recall = [0 for col in range(10)]
+#     f1 = [0 for col in range(10)]
+#     for i in range(10):
+#         accuracy[i] = 0
+#         precision[i] = 0
+#         recall[i] = 0
 
 
 def main(k):
