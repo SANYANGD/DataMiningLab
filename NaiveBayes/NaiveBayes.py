@@ -8,8 +8,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 
-# 去除文件中@开头的行
 def writeFile(filename):
+    """去除文件中@开头的行"""
     with open(filename, mode='r') as f:
         data = f.read()
         result = data.split('\n')
@@ -20,8 +20,8 @@ def writeFile(filename):
                     file.writelines(i + '\n')
 
 
-# UTF-8编码格式csv文件数据读取
 def csv2arr(filename):
+    """UTF-8编码格式csv文件数据读取"""
     df = pd.read_csv(filename)  # 返回一个DataFrame的对象，这个是pandas的一个数据结构
     df.columns = ['Class', 'Age', 'Sex', 'Survived']
     data = df[['Class', 'Age', 'Sex', 'Survived']]
@@ -29,13 +29,13 @@ def csv2arr(filename):
     return data
 
 
-# 计算香农熵 pklog2pk
 def countH(m, n):
+    """计算香农熵 pklog2pk"""
     return -m / (m + n) * math.log(m / (m + n), 2) - n / (m + n) * math.log(n / (m + n), 2)
 
 
-# 统计属性中的元素数量
 def countP(data):
+    """统计属性中的元素数量"""
     data_cnt = {}  # 将结果用一个字典存储
     # 统计结果
     for d in data:
@@ -45,8 +45,8 @@ def countP(data):
     return data_cnt
 
 
-# 将连续数据离散化
 def attLisan(data):
+    """根据信息增益的方法找到属性划分的分界点"""
     tempI = [0, 0, 0]
     for j in range(0, 3):
         att = countP(data[:, j])
@@ -64,34 +64,18 @@ def attLisan(data):
     return tempI
 
 
-# 将连续数据离散化
 def attLisan2(data, th):
+    """根据找到的结点将连续数据离散化"""
     for i in range(0, 3):
         for j in range(0, len(data)):
-            if data[j, i] > th[i]: data[j, i] = 1
-            else: data[j, i] = 0
+            if data[j, i] > th[i]:
+                data[j, i] = 1
+            else:
+                data[j, i] = 0
 
 
-# # 将连续数据离散化
-# def attLisanOld(data, th):
-#     for i in range(0, len(data)):
-#         for j in range(0, 3):
-#             if j == 0 and data[i, j] < -0.4275:
-#                 data[i, j] = 0
-#             elif j == 0 and data[i, j] >= -0.4275:
-#                 data[i, j] = 1
-#             elif j == 1 and data[i, j] < 2.076:
-#                 data[i, j] = 0
-#             elif j == 1 and data[i, j] >= 2.076:
-#                 data[i, j] = 1
-#             elif j == 2 and data[i, j] < -0.6995:
-#                 data[i, j] = 0
-#             elif j == 2 and data[i, j] >= -0.6995:
-#                 data[i, j] = 1
-
-
-# 数据集划分
 def dataSplit(data):
+    """数据集划分为0.7的训练集和0。3的验证集"""
     a = data[:, 0:3]
     t = data[:, 3]
     train_a, test_a, train_t, test_t = \
@@ -100,7 +84,6 @@ def dataSplit(data):
     return train_a, test_a, train_t, test_t
 
 
-# 计算先验概率
 # p_at[Class1_Survived1, Class0_Survived1,
 #      Age1_Survived1,   Age0_Survived1,
 #      Sex1_Survived1,   Sex0_Survived1,
@@ -112,6 +95,7 @@ def dataSplit(data):
 #     Sex1,   Sex0_]
 # p_t[Survived1, Survived0]
 def naiveBayes(train_a, train_t):
+    """计算先验概率"""
     count_t = [0, 0]
     count_a = [0, 0, 0, 0, 0, 0]
     count_at = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -140,27 +124,27 @@ def naiveBayes(train_a, train_t):
             count_at[0] = count_at[0] + 1
         elif train_t[i] == 1 and train_a[i, 0] == 0:
             count_at[1] = count_at[1] + 1
-    # for i in range(0, len(train_t)):
+        # for i in range(0, len(train_t)):
         if train_t[i] == 1 and train_a[i, 1] == 1:
             count_at[2] = count_at[2] + 1
         elif train_t[i] == 1 and train_a[i, 1] == 0:
             count_at[3] = count_at[3] + 1
-    # for i in range(0, len(train_t)):
+        # for i in range(0, len(train_t)):
         if train_t[i] == 1 and train_a[i, 2] == 1:
             count_at[4] = count_at[4] + 1
         elif train_t[i] == 1 and train_a[i, 2] == 0:
             count_at[5] = count_at[5] + 1
-    # for i in range(0, len(train_t)):
+        # for i in range(0, len(train_t)):
         if train_t[i] == -1 and train_a[i, 0] == 1:
             count_at[6] = count_at[6] + 1
         elif train_t[i] == -1 and train_a[i, 0] == 0:
             count_at[7] = count_at[7] + 1
-    # for i in range(0, len(train_t)):
+        # for i in range(0, len(train_t)):
         if train_t[i] == -1 and train_a[i, 1] == 1:
             count_at[8] = count_at[8] + 1
         elif train_t[i] == -1 and train_a[i, 1] == 0:
             count_at[9] = count_at[9] + 1
-    # for i in range(0, len(train_t)):
+        # for i in range(0, len(train_t)):
         if train_t[i] == -1 and train_a[i, 2] == 1:
             count_at[10] = count_at[10] + 1
         elif train_t[i] == -1 and train_a[i, 2] == 0:
@@ -171,16 +155,16 @@ def naiveBayes(train_a, train_t):
            count_a[2] / len(train_t), count_a[3] / len(train_t),
            count_a[4] / len(train_t), count_a[5] / len(train_t)]
     p_at = [count_at[0] / count_t[0], count_at[1] / count_t[0],
-           count_at[2] / count_t[0], count_at[3] / count_t[0],
-           count_at[4] / count_t[0], count_at[5] / count_t[0],
-           count_at[6] / count_t[1], count_at[7] / count_t[1],
-           count_at[8] / count_t[1], count_at[9] / count_t[1],
-           count_at[10] / count_t[1], count_at[11] / count_t[1]]
+            count_at[2] / count_t[0], count_at[3] / count_t[0],
+            count_at[4] / count_t[0], count_at[5] / count_t[0],
+            count_at[6] / count_t[1], count_at[7] / count_t[1],
+            count_at[8] / count_t[1], count_at[9] / count_t[1],
+            count_at[10] / count_t[1], count_at[11] / count_t[1]]
     return p_at, p_t, p_a
 
 
-# 后验概率计算
 def classifier(test_a, test_t, p_at, p_t, p_a):
+    """计算后验概率,并将数据分类"""
     r = 0
     for i in range(0, len(test_a)):
         yesTemp, noTemp, ptemp = 1, 1, 1
@@ -221,15 +205,33 @@ def classifier(test_a, test_t, p_at, p_t, p_a):
     return r / len(test_t)
 
 
-# 主函数
+# # 将连续数据离散化
+# def attLisanOld(data, th):
+#     for i in range(0, len(data)):
+#         for j in range(0, 3):
+#             if j == 0 and data[i, j] < -0.4275:
+#                 data[i, j] = 0
+#             elif j == 0 and data[i, j] >= -0.4275:
+#                 data[i, j] = 1
+#             elif j == 1 and data[i, j] < 2.076:
+#                 data[i, j] = 0
+#             elif j == 1 and data[i, j] >= 2.076:
+#                 data[i, j] = 1
+#             elif j == 2 and data[i, j] < -0.6995:
+#                 data[i, j] = 0
+#             elif j == 2 and data[i, j] >= -0.6995:
+#                 data[i, j] = 1
+
+
 def main():
-    # writeFile('./titanic.dat')
-    dataset = csv2arr('./titanic.csv')
-    threshold = attLisan(dataset)
-    attLisan2(dataset, threshold)
-    train_att, test_att, train_tag, test_tag = dataSplit(dataset)
-    p_att_tag, p_tag, p_att = naiveBayes(train_att, train_tag)
-    right = classifier(test_att, test_tag, p_att_tag, p_tag, p_att)
+    """主函数"""
+    # writeFile('./titanic.dat')  # 去除文件中@开头的行
+    dataset = csv2arr('./titanic.csv')  # 读取csv文件数据生产对应二维列表
+    threshold = attLisan(dataset)  # 根据信息增益的方法找到属性划分的分界点
+    attLisan2(dataset, threshold)  # 根据找到的结点将连续数据离散化
+    train_att, test_att, train_tag, test_tag = dataSplit(dataset)  # 数据集划分为0.7的训练集和0。3的验证集
+    p_att_tag, p_tag, p_att = naiveBayes(train_att, train_tag)  # 计算先验概率
+    right = classifier(test_att, test_tag, p_att_tag, p_tag, p_att)  # 计算后验概率,并将数据分类
     print('正确率为：%f' % (right))
 
 

@@ -1,10 +1,10 @@
-
 import time
 import numpy as np
 from sklearn.datasets import make_blobs
 from sklearn.metrics import classification_report
 
 
+# 读取数据返回x_train, y_train, x_test, y_test
 def load_data(remainder):
     filepath = 'dataset.csv'
     data = np.loadtxt(filepath, dtype=np.float, delimiter=',', usecols=range(12), encoding='utf-8')
@@ -21,6 +21,7 @@ def load_data(remainder):
     return np.asarray(x_train), np.asarray(y_train), np.asarray(x_test), np.asarray(y_test)
 
 
+# 按照John Platt的论文构造SMO的数据结构
 class SVM_SMO:
 
     # 按照John Platt的论文构造SMO的数据结构
@@ -38,6 +39,7 @@ class SVM_SMO:
         self.eps = 0.01  # error tolerance
 
 
+# 高斯核函数 返回参数为sigma的数组x和y的高斯相似度
 def gaussian_kernel(x, y, sigma=1):
     # 高斯核函数 返回参数为sigma的数组x和y的高斯相似度
     result = 0
@@ -173,6 +175,7 @@ def take_step(i1, i2, model):
     return 1, model
 
 
+# 计算E值
 def get_error(model, i):
     if 0 < model.alphas[i] < model.C:
         return model.errors[i]
@@ -180,6 +183,7 @@ def get_error(model, i):
         return decision_function(model=model, i=i) - model.y[i]
 
 
+# 确定alpha1, 也就是old alpha1，并送到take_step优化
 def examine_example(i2, model):
     y2 = model.y[i2]
     alph2 = model.alphas[i2]
@@ -203,7 +207,8 @@ def examine_example(i2, model):
                 return 1, model
 
         # 循环所有非0 非C alphas值进行优化，随机选择起始点
-        for i1 in np.roll(np.where((model.alphas != 0) & (model.alphas != model.C))[0], np.random.choice(np.arange(model.m))):
+        for i1 in np.roll(np.where((model.alphas != 0) & (model.alphas != model.C))[0],
+                          np.random.choice(np.arange(model.m))):
             step_result, model = take_step(i1, i2, model)
             if step_result:
                 return 1, model
@@ -217,6 +222,9 @@ def examine_example(i2, model):
     return 0, model
 
 
+# 顺序执行所有样本(第一个if中的循环)，且else中的循环没有可优化的alpha，目标函数收敛了：
+# 在容差之内，并且满足KKT条件则循环退出; 如果执行loop_num次仍未收敛，也退出。
+# 重点在于确定old alpha2的下标，old alpha2和old alpha1都是启发式的选择
 def routine(model):
     num_changed = 0
     exam_all = 1
@@ -255,7 +263,7 @@ def routine(model):
     # return model
 
 
-# 判别函数
+# 分类函数
 def classification(model, test):
     i = 0
     x = []
@@ -265,7 +273,7 @@ def classification(model, test):
             x.append(bs)
         i += 1
     # 将决策函数应用于'x_test'中的输入特征向量
-    return (model.alphas * model.y).dot(model.kernel(model.X, test)) + (sum(x)/len(x))  # model.b
+    return (model.alphas * model.y).dot(model.kernel(model.X, test)) + (sum(x) / len(x))  # model.b
 
 
 def main(remainder):
@@ -284,9 +292,12 @@ def main(remainder):
     # 训练模型
     routine(svm_model)
 
+    # 分类
     predict = classification(svm_model, test=x_test)
     predict[predict < 0] = -1
     predict[predict > 0] = 1
+
+    # 打印结果
     print(classification_report(y_test, predict))
 
     return y_test, predict
@@ -300,4 +311,3 @@ if __name__ == '__main__':
         real.extend(r)
         predict.extend(p)
     print(classification_report(real, predict))
-

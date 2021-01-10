@@ -6,6 +6,7 @@ import math
 from sklearn.metrics import classification_report
 
 
+# 数据集划分，k取0-9 mod(10)
 def divide_train_test(k):
     # 数据集划分，k取0-9
     i = 0
@@ -22,6 +23,16 @@ def divide_train_test(k):
     ftest.close()
 
 
+# 停词获取
+def get_stopword():
+    # 停词
+    with open('cnews.vocab.txt', 'r', encoding='utf-8') as sw:
+        sw_list = sw.readlines()
+        sws = [x.strip() for x in sw_list]
+    return sws
+
+
+# 结巴分词
 def jieba_cut(data):
     # 结巴分词
     txt_list = [[] for _ in range(10)]
@@ -38,6 +49,7 @@ def jieba_cut(data):
     return txt_list
 
 
+# 数据加载,写入列表x_train, y_train, x_test, y_test
 def data_load():
     # 数据加载
     with open('cnews.train.txt', 'r', encoding='utf-8') as f_train:
@@ -51,14 +63,7 @@ def data_load():
     return x_train, y_train, x_test, y_test
 
 
-def get_stopword():
-    # 停词
-    with open('cnews.vocab.txt', 'r', encoding='utf-8') as sw:
-        sw_list = sw.readlines()
-        sws = [x.strip() for x in sw_list]
-    return sws
-
-
+# 计算词频
 def word_frequency(data):
     c = [[] for _ in range(10)]
     for i in range(0, len(data)):
@@ -73,6 +78,7 @@ def word_frequency(data):
     return c
 
 
+# 计算先验概率
 def conditional_probability(data):
     k = [[] for _ in range(10)]
     ks = []
@@ -103,6 +109,7 @@ def conditional_probability(data):
     return p
 
 
+# 计算后验概率，得到分类结果
 def test_data(c_p, t):
     pp = [{} for _ in range(len(t))]
     xt = [[] for _ in range(len(t))]
@@ -115,7 +122,7 @@ def test_data(c_p, t):
         for j in range(10):
             p = 1
             # for k in xt[i]:
-            # 优化正确率，dict(Counter(xt[i]).most_common(30)).keys()表示只计算测试文本中最常见的30个词
+            # 优化正确率，dict(Counter(xt[i]).most_common(50)).keys()表示只计算测试文本中最常见的50个词
             for k in dict(Counter(xt[i]).most_common(50)).keys():
                 if k in c_p[j]:
                     for number in range(Counter(xt[i])[k]):
@@ -138,6 +145,10 @@ def test_data(c_p, t):
 #     #           '游戏',
 #     #           '科技',
 #     #           '财经',
+#     # True Positive (TP): 把正样本成功预测为正。
+#     # True Negative (TN)：把负样本成功预测为负。
+#     # False Positive (FP)：把负样本错误地预测为正。
+#     # False Negative (FN)：把正样本错误的预测为负。
 #     e = [[0 for col in range(10)] for row in range(10)]
 #     n = -1
 #     for m in range(len(predict)):
@@ -164,39 +175,25 @@ def test_data(c_p, t):
 
 
 def main(k):
-    divide_train_test(k)
+    divide_train_test(k)  # 划分数据集
     x_train, y_train, x_test, y_test = data_load()
-    tag = ['体育', '娱乐', '家居', '房产', '教育', '时尚', '时政', '游戏', '科技', '财经']
-
-    train_data = jieba_cut(x_train)
-
-    # 得到10种类别训练集的dict , count[ dict * 10 ]
-    count = word_frequency(train_data)
-
-    # 条件概率 con_pro[1-10]{词：条件概率}
-    con_pro = conditional_probability(count)
-
-    # 输出测试的tag
-    test_tag = test_data(con_pro, x_test)
-
-    ri = classification_report(y_test, test_tag)
+    # tag = ['体育', '娱乐', '家居', '房产', '教育', '时尚', '时政', '游戏', '科技', '财经']
+    train_data = jieba_cut(x_train)  # 结巴分词
+    count = word_frequency(train_data)  # 得到10种类别训练集的dict , count[ dict * 10 ]
+    con_pro = conditional_probability(count)  # 条件概率 con_pro[1-10]{词：条件概率}
+    test_tag = test_data(con_pro, x_test)  # 输出测试的tag
+    ri = classification_report(y_test, test_tag)  # 计算评价指标
     print(ri)
-
     # evaluate(test_tag, y_test)
 
     # for i in range(len(test_tag)):
     #     print(test_tag[i], end=' ')
     #     if (i + 1) % 10 == 0:
     #         print(' ')
-
     return ri, y_test, test_tag
 
 
 if __name__ == '__main__':
-    # True Positive (TP): 把正样本成功预测为正。
-    # True Negative (TN)：把负样本成功预测为负。
-    # False Positive (FP)：把负样本错误地预测为正。
-    # False Negative (FN)：把正样本错误的预测为负。
     result = [[] for row in range(10)]
     real = []
     predict = []
